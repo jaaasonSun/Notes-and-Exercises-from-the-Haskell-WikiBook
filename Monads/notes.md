@@ -40,3 +40,39 @@ return x >>= f = fx
 liftM :: (Monad m) => (a1 -> r) -> m a1 -> m r
 ap :: Monad m => m (a -> b) -> ma -> mb
 ```
+
+## Alternative and MonadPlus
+
+``` haskell
+class Applicative f => Alternative f where
+    empty :: f a 
+    (<|> :: f a -> f a -> f a)
+```
+
+``` haskell
+class Monad m => MonadPlus m where
+    mzero :: m a
+    mplus :: m a -> m a -> m a 
+```
+
+### Laws
+
+- `<|>` is associative
+- `empty` is left and right identity of `<|>`
+
+- `mplus` is associative
+- `mzero` is left and right identity of `mplus`
+- `mzero` is left and right zero of `(>>=)`
+
+### Additional Functions
+
+``` haskell
+asum :: (Alternative f, Foldable t) => t (f a) -> f a
+asum = foldr (<|>) empty
+
+msum :: (Monad f, Foldable t) => t (m a) -> m a
+
+guard :: Alternative m => Bool -> m ()
+guard True = pure()
+guard _ = empty
+```
