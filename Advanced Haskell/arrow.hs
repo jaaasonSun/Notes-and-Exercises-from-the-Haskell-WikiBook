@@ -1,6 +1,6 @@
 {-# LANGUAGE Arrows #-}
 
--- module Main where
+module Main where
 
 import Control.Arrow
 import Control.Monad

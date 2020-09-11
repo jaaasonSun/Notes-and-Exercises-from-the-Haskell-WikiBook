@@ -77,7 +77,7 @@ asl (x, (y z)) = ((x, y), z)
 g *** h = \(x, y) -> (g x, h y)
 ```
 
-## Foldable
+ ## Foldable
 
 ``` haskell
 foldMap :: Moniod m => (a -> m) -> t a -> m
@@ -117,4 +117,44 @@ traverse (Compose . fmap g . f) = Compose . fmap (traverse g) . traverse f
 -- if t is an aplicative homomorphism
 t . traverse f = traverse (t . f)
     -- naturality
+```
+
+## Arrow
+
+``` haskell
+class Category y where
+    id :: y a a 
+    (.) :: y b c -> y a b -> y a c
+    
+class Category y => Arrow y where
+    arr :: (a -> b) -> y a b 
+    first :: y a b -> y (a, c) (b, c)
+    
+    second :: y a b -> y (c, a) (c, b)
+    (***) :: y a c -> y b d -> y (a, b) (c, d)
+    (&&&) :: y a b -> y a c -> y a (b, c)
+    
+class Arrow y => ArrowChoice y where
+    left :: y a b -> y (Either a c) (Either b c)
+    
+    right :: y a b -> y (Either c a) (Either c b)
+    (+++) :: y a c -> y b d -> y (Either a b) (Either c d)
+    (|||) :: y a c -> y b c -> y (Either a b) c
+
+class Arrow y => ArrowApply y where
+    app :: y (y a b, a) b
+```
+
+## Cont Monad
+
+``` haskell
+cont :: ((a -> r) -> r) -> Cont r a 
+runCont :: Cont r a -> (a -> r) -> r 
+
+instance Monad (Cont r) where 
+    return x = cont ($ x)
+    s >>= f = cont $ \c -> runCont s $ \x -> runCont (f x) c
+    
+callCC :: ((a -> Cont r b) -> Cont r a) -> Cont r a
+callCC f = cont $ \h -> runCont (f (\a -> cont $ \_ -> h a)) h
 ```
