@@ -158,3 +158,67 @@ instance Monad (Cont r) where
 callCC :: ((a -> Cont r b) -> Cont r a) -> Cont r a
 callCC f = cont $ \h -> runCont (f (\a -> cont $ \_ -> h a)) h
 ```
+
+## Lens
+
+### Route to Lens 
+
+``` haskell
+-- Traversable
+traverse :: (Applicative f, Traversable t) => (a -> f a) -> t a -> f (t b)
+-- made more general, (i.e. remove the need for a traversable context)
+type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+-- specialising f to Settable (which is similar to Identity)
+type Setter s t a b = forall f. Settable => (a -> f b) -> s -> f t
+-- Restricting f makes Setter more general than Traversal. 
+-- over is the cominator for setter
+over :: ASetter s t a b -> (a -> b) -> s -> t
+
+-- Restricting f to Contravariant as well
+type Fold s a = forall f. (Contravariant f, Applicative f) => (a -> f a) -> s -> f s 
+-- where Contravariant is
+contramap :: Contravariant f => (a -> b) -> f b -> f a
+-- subjecting to laws
+contramap id = id 
+contramap (g . f) = contramap f . contramap g
+-- f being both Contravariant and Functor makes it essentially Const
+-- Fold is also more general than Traversable
+
+-- Relaxing Applicative requirement
+type Getter s a = forall f. (Contravariant f, Functor f) => (a -> f a) -> s -> f s 
+-- f is still Const like, but is not Applicative now, so Getter has exactly onr target
+
+-- Lens
+type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
+-- is less general than Getter and Setter, making it both
+```
+
+### Operators
+
+- `view` <=> `flip ^.`
+- `set` <=> `.~`
+- `over` <=> `%~`
+- `toListOf` <=> `flip ^..`
+- `preview` <=> `flip ^?`
+
+## Mutable Objects
+
+### IORef
+
+``` haskell
+newIORef :: a -> IO (IORef a)
+readIORef :: IORef a -> IO a 
+modifyIORef :: IORef a -> (a -> a) -> IO ()
+writeIORef :: IORef a -> a -> IO ()
+```
+
+### ST Monad 
+
+``` haskell
+data ST s a
+runST :: (forall s. ST s a) -> a 
+```
+
+Type variable `s` is intentionally marked `forall` so `s` cannot be matched across different invocations of `runST`, `s` cannot escape its scope.
+

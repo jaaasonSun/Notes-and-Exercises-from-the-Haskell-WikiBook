@@ -72,11 +72,3 @@ instance Traversable AT where
 -- 2.1
 transpose :: [[a]] -> [[a]]
 transpose = getZipList . traverse ZipList
-
--- 2.3
-
-mapAccumLState :: (Traversable t, Applicative f) => (b -> State a c) -> t b -> State a c
-mapAccumLState f t = traverse t f
-
-mapAccumL : Traversable t = (a -> b -> (a, c)) -> a -> t b -> (a, t c)
-mapAccumL f a t = runState $ traverse (state . flip f) t $ a
